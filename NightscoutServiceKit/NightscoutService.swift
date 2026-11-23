@@ -49,6 +49,21 @@ public final class NightscoutService: Service {
     }
     private let lockedObjectIdCache: Locked<ObjectIdCache>
 
+    /// The open suspend (no end yet) last uploaded, re-uploaded each loop cycle so Nightscout
+    /// shows a zero temp running a little past now, like a temp basal. (custom)
+    var openSuspend: DoseEntry? {
+        get {
+            return lockedOpenSuspend.value
+        }
+        set {
+            lockedOpenSuspend.value = newValue
+        }
+    }
+    private let lockedOpenSuspend = Locked<DoseEntry?>(nil)
+
+    /// Stop refreshing an open suspend after this long (custom)
+    static let openSuspendRefreshLimit = TimeInterval(24 * 60 * 60)
+
     private var _uploader: NightscoutClient?
 
     private var uploader: NightscoutClient? {
@@ -89,13 +104,60 @@ public final class NightscoutService: Service {
         self.commandSourceV1.delegate = self
         
         restoreCredentials()
+
+        if let startDate = rawState["openSuspendStartDate"] as? Date {
+            self.openSuspend = DoseEntry(type: .suspend, startDate: startDate, value: 0, unit: .units,
+                                         syncIdentifier: rawState["openSuspendSyncIdentifier"] as? String)
+        }
     }
 
     public var rawState: RawStateValue {
-        return [
+        var rawState: RawStateValue = [
             "isOnboarded": isOnboarded,
             "objectIdCache": objectIdCache.rawValue
         ]
+        if let openSuspend {
+            rawState["openSuspendStartDate"] = openSuspend.startDate
+            rawState["openSuspendSyncIdentifier"] = openSuspend.syncIdentifier
+        }
+        return rawState
+    }
+
+    /// Tracks the latest open suspend from a batch of dose uploads. (custom)
+    func trackOpenSuspend(from doses: [DoseEntry]) {
+        for dose in doses.sorted(by: { $0.startDate < $1.startDate }) {
+            switch dose.type {
+            case .suspend where dose.isOpenSuspend:
+                if openSuspend.map({ dose.startDate >= $0.startDate }) ?? true {
+                    openSuspend = dose
+                }
+            case .suspend, .resume, .tempBasal, .basal:
+                // Anything that closes or follows the suspend ends it
+                if let suspend = openSuspend, dose.syncIdentifier == suspend.syncIdentifier || dose.startDate >= suspend.startDate {
+                    openSuspend = nil
+                }
+            case .bolus:
+                break
+            }
+        }
+        if let suspend = openSuspend, Date().timeIntervalSince(suspend.startDate) > Self.openSuspendRefreshLimit {
+            openSuspend = nil
+        }
+    }
+
+    /// Re-uploads the open suspend with a refreshed duration. (custom)
+    private func refreshOpenSuspend(using uploader: NightscoutClient, completion: @escaping () -> Void) {
+        trackOpenSuspend(from: [])
+        guard let suspend = openSuspend else {
+            completion()
+            return
+        }
+        uploader.createDoses([suspend], usingObjectIdCache: objectIdCache) { result in
+            if case .failure(let error) = result {
+                self.log.error("Failed to refresh open suspend: %{public}@", String(describing: error))
+            }
+            completion()
+        }
     }
 
     public var lastDosingDecisionForAutomaticDose: StoredDosingDecision?
@@ -248,6 +310,7 @@ extension NightscoutService: RemoteDataService {
             case .failure(let error):
                 completion(.failure(error))
             case .success(let createdObjectIds):
+                self.trackOpenSuspend(from: created)
                 let createdUploaded = !created.isEmpty
                 let syncIdentifiers = created.map { $0.syncIdentifier }
                 for (syncIdentifier, objectId) in zip(syncIdentifiers, createdObjectIds) {
@@ -296,10 +359,14 @@ extension NightscoutService: RemoteDataService {
             return decision.deviceStatus(automaticDoseDecision: automaticDoseDecision)
         }
 
+        // Each loop cycle, keep an open suspend's zero temp running ahead of now (custom)
         guard statuses.count > 0 else {
-            completion(.success(false))
+            refreshOpenSuspend(using: uploader) {
+                completion(.success(false))
+            }
             return
         }
+        refreshOpenSuspend(using: uploader) {}
 
         uploader.uploadDeviceStatuses(statuses) { result in
             switch result {
