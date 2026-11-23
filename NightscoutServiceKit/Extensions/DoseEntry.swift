@@ -19,6 +19,13 @@ extension DoseEntry {
         return type == .suspend && endDate <= startDate
     }
 
+    /// Notes when the insulin type counts at a different potency, e.g. "Afrezza 4U, counted as 2U" (custom)
+    var potencyNote: String? {
+        guard let insulinType, insulinType.potencyFactor != 1 else { return nil }
+        let units = deliveredUnits ?? programmedUnits
+        return String(format: "%@ %gU, counted as %gU", insulinType.brandName, units, units * insulinType.potencyFactor)
+    }
+
     func treatment(enteredBy source: String, withObjectId objectId: String?) -> NightscoutTreatment? {
         let duration = endDate.timeIntervalSince(startDate)
 
@@ -35,6 +42,7 @@ extension DoseEntry {
                 unabsorbed: 0,  // The pump's reported IOB isn't relevant, nor stored
                 duration: duration,
                 automatic: automatic ?? false,
+                notes: potencyNote,
                 /* id: objectId, */ /// Specifying _id only works when doing a put (modify); all dose uploads are currently posting so they can be either create or update
                 syncIdentifier: syncIdentifier,
                 insulinType: insulinType?.brandName
