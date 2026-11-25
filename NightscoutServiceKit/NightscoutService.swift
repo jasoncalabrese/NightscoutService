@@ -7,6 +7,7 @@
 //
 
 import os.log
+import CryptoKit
 import HealthKit
 import LoopKit
 import NightscoutKit
@@ -15,6 +16,7 @@ public enum NightscoutServiceError: Error {
     case incompatibleTherapySettings
     case missingCredentials
     case missingCommandSource
+    case activityUploadFailed(statusCode: Int)  // (custom)
 }
 
 
@@ -453,6 +455,73 @@ extension NightscoutService: RemoteDataService {
                 completion(.failure(error))
             }
         })
+    }
+
+    public var exerciseDataLimit: Int? { return 100 }
+
+    public var exerciseDataDescription: String? {
+        LocalizedString("Nightscout receives your workouts as Exercise treatments, and your steps and physical effort as activity records.", comment: "What Nightscout does with exercise data, shown with the exercise data setting")
+    }
+
+    public func uploadExerciseData(added: [StoredWorkout], deleted: [UUID]) async throws {
+        guard hasConfiguration, let uploader = uploader else {
+            return
+        }
+
+        let source = "loop://\(await UIDevice.current.name)"
+        let treatments = added.map { $0.treatment(enteredBy: source) }
+        let deletions = deleted.map(\.uuidString)
+
+        try await withCheckedThrowingContinuation({ (continuation: CheckedContinuation<Void, Error>) -> Void in
+            uploader.deleteTreatmentsById(deletions) { error in
+                if let error {
+                    continuation.resume(throwing: error)
+                    return
+                }
+                uploader.upload(treatments) { result in
+                    switch result {
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    case .success:
+                        continuation.resume()
+                    }
+                }
+            }
+        })
+    }
+
+    // MARK: - Steps and physical effort (custom)
+
+    public var healthSampleDataLimit: Int? { return 500 }
+
+    /// Steps and physical effort go to Nightscout's activity collection, one record per sample.
+    /// Other kinds are skipped. Deletions aren't sent: activity records can only be deleted by
+    /// their Nightscout id.
+    public func uploadHealthSamples(kind: StoredHealthSample.Kind, added: [StoredHealthSample], deleted: [UUID]) async throws {
+        guard hasConfiguration, let siteURL, let apiSecret, StoredHealthSample.nightscoutActivityKinds.contains(kind) else {
+            return
+        }
+
+        let records = added.nightscoutActivity(enteredBy: "loop://\(await UIDevice.current.name)")
+        guard !records.isEmpty else {
+            return
+        }
+
+        // Nightscout's activity API rejects large bodies (413), so post at most 100 records at a time
+        let hashedSecret = Insecure.SHA1.hash(data: Data(apiSecret.utf8)).map { String(format: "%02hhx", $0) }.joined()
+        for start in stride(from: 0, to: records.count, by: 100) {
+            var request = URLRequest(url: siteURL.appendingPathComponent("api/v1/activity"))
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+            request.setValue(hashedSecret, forHTTPHeaderField: "api-secret")
+            request.httpBody = try JSONSerialization.data(withJSONObject: Array(records[start..<Swift.min(start + 100, records.count)]))
+
+            let (_, response) = try await URLSession.shared.data(for: request)
+            if let httpResponse = response as? HTTPURLResponse, !(200..<300).contains(httpResponse.statusCode) {
+                throw NightscoutServiceError.activityUploadFailed(statusCode: httpResponse.statusCode)
+            }
+        }
     }
 
     public func uploadCgmEventData(_ stored: [LoopKit.PersistedCgmEvent], completion: @escaping (Result<Bool, Error>) -> Void) {

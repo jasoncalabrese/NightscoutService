@@ -15,6 +15,10 @@
 		A90E39A122BC773A0016DFE8 /* NightscoutUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90E39A022BC773A0016DFE8 /* NightscoutUploader.swift */; };
 		A90E39A322BC782C0016DFE8 /* SyncCarbObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90E39A222BC782C0016DFE8 /* SyncCarbObject.swift */; };
 		A90E39A522BC791E0016DFE8 /* DoseEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90E39A422BC791E0016DFE8 /* DoseEntry.swift */; };
+		E7A1D0012F1B4A0E00A1B2C3 /* StoredWorkout.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A1D0002F1B4A0E00A1B2C3 /* StoredWorkout.swift */; };
+		C0570E0D2F00A00000000006 /* StoredHealthSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0570E0D2F00A00000000005 /* StoredHealthSample.swift */; };
+		E7A1D0032F1B4A0E00A1B2C3 /* WorkoutTreatmentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7A1D0022F1B4A0E00A1B2C3 /* WorkoutTreatmentTests.swift */; };
+		C0570E0D2F00A00000000008 /* HealthSampleActivityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0570E0D2F00A00000000007 /* HealthSampleActivityTests.swift */; };
 		A90E39A722BC7A360016DFE8 /* HKUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90E39A622BC7A360016DFE8 /* HKUnit.swift */; };
 		A90E39A922BC7AD10016DFE8 /* Bundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90E39A822BC7AD10016DFE8 /* Bundle.swift */; };
 		A91BAC2522BC691A00ABF1BB /* NightscoutServiceKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A91BAC1B22BC691A00ABF1BB /* NightscoutServiceKit.framework */; };
@@ -146,6 +150,10 @@
 		A90E39A022BC773A0016DFE8 /* NightscoutUploader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightscoutUploader.swift; sourceTree = "<group>"; };
 		A90E39A222BC782C0016DFE8 /* SyncCarbObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncCarbObject.swift; sourceTree = "<group>"; };
 		A90E39A422BC791E0016DFE8 /* DoseEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseEntry.swift; sourceTree = "<group>"; };
+		E7A1D0002F1B4A0E00A1B2C3 /* StoredWorkout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredWorkout.swift; sourceTree = "<group>"; };
+		C0570E0D2F00A00000000005 /* StoredHealthSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoredHealthSample.swift; sourceTree = "<group>"; };
+		E7A1D0022F1B4A0E00A1B2C3 /* WorkoutTreatmentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutTreatmentTests.swift; sourceTree = "<group>"; };
+		C0570E0D2F00A00000000007 /* HealthSampleActivityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthSampleActivityTests.swift; sourceTree = "<group>"; };
 		A90E39A622BC7A360016DFE8 /* HKUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HKUnit.swift; sourceTree = "<group>"; };
 		A90E39A822BC7AD10016DFE8 /* Bundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bundle.swift; sourceTree = "<group>"; };
 		A91BAC1B22BC691A00ABF1BB /* NightscoutServiceKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NightscoutServiceKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -261,6 +269,8 @@
 			isa = PBXGroup;
 			children = (
 				A90E39A422BC791E0016DFE8 /* DoseEntry.swift */,
+				E7A1D0002F1B4A0E00A1B2C3 /* StoredWorkout.swift */,
+				C0570E0D2F00A00000000005 /* StoredHealthSample.swift */,
 				A90E39A622BC7A360016DFE8 /* HKUnit.swift */,
 				A90E39A022BC773A0016DFE8 /* NightscoutUploader.swift */,
 				C1F7822727CD57A100C0919A /* OverrideTreament.swift */,
@@ -325,6 +335,8 @@
 				A941B09629BD4ACA00F91340 /* CarbRemoteNotificationTestCase.swift */,
 				A95F887426C694E900D8A009 /* OTPManagerTestCase.swift */,
 				C0570E0D2F00A00000000001 /* OpenSuspendTestCase.swift */,
+				E7A1D0022F1B4A0E00A1B2C3 /* WorkoutTreatmentTests.swift */,
+				C0570E0D2F00A00000000007 /* HealthSampleActivityTests.swift */,
 				A941B09729BD4ACA00F91340 /* OverrideCancelRemoteNotificationTestCase.swift */,
 				A941B09829BD4ACA00F91340 /* OverrideRemoteNotificationTestCase.swift */,
 				A95F887326C694E800D8A009 /* NightscoutServiceKitTests-Bridging-Header.h */,
@@ -746,6 +758,8 @@
 				657F99E02F0BC17B00F732BD /* OTPSecureMessenger.swift in Sources */,
 				C1398D2227C434FB00416AD6 /* Data.swift in Sources */,
 				A90E39A522BC791E0016DFE8 /* DoseEntry.swift in Sources */,
+				E7A1D0012F1B4A0E00A1B2C3 /* StoredWorkout.swift in Sources */,
+				C0570E0D2F00A00000000006 /* StoredHealthSample.swift in Sources */,
 				A934B6182358F49300949C8B /* StoredSettings.swift in Sources */,
 				A9C62DA42331CAD400535612 /* OSLog.swift in Sources */,
 				C1F7822827CD57A100C0919A /* OverrideTreament.swift in Sources */,
@@ -762,6 +776,8 @@
 				A941B09B29BD4ACA00F91340 /* OverrideCancelRemoteNotificationTestCase.swift in Sources */,
 				A95F887526C694E900D8A009 /* OTPManagerTestCase.swift in Sources */,
 				C0570E0D2F00A00000000002 /* OpenSuspendTestCase.swift in Sources */,
+				E7A1D0032F1B4A0E00A1B2C3 /* WorkoutTreatmentTests.swift in Sources */,
+				C0570E0D2F00A00000000008 /* HealthSampleActivityTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
